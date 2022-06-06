@@ -1,8 +1,16 @@
+#include <TM1637.h>
+
+//Pin Definitions
 const byte rotEnc1 = 3;
 const byte rotEnc2 = 4;
 const byte hallEff = 2;
 const byte sol1 = 5;
 const byte sol2 = 6;
+const byte CLK = 7;
+const byte DIO = 8;
+const byte pot = A0;
+TM1637 tm(CLK,DIO);
+
 const int flywheelTeeth = 48;
 
 volatile int count = 0;
@@ -22,12 +30,18 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(rotEnc1), updatePos, CHANGE);
   attachInterrupt(digitalPinToInterrupt(hallEff), rotComplete, FALLING);
   Serial.begin(9600);
+  tm.init();
+  tm.set(2);
+  displayNumber(6969);
+  
   while (!rot) {
     delay(10);
   }
 }
 
 void loop() {
+  displayNumber(analogRead(A0));
+  Serial.println(analogRead(A0));
   if (count >= flywheelTeeth) {
     count = count - flywheelTeeth;
     newTime = millis();
@@ -101,5 +115,12 @@ void updatePos() {
 
 void rotComplete() {
   rot = true;
+}
+
+void displayNumber(int num){   
+    tm.display(3, num % 10);   
+    tm.display(2, num / 10 % 10);   
+    tm.display(1, num / 100 % 10);   
+    tm.display(0, num / 1000 % 10);
 }
 
