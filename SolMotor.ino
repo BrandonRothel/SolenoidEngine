@@ -9,7 +9,7 @@ const byte sol2 = 6;
 const byte CLK = 7;
 const byte DIO = 8;
 const byte pot = A0;
-TM1637 tm(CLK,DIO);
+TM1637 tm(CLK, DIO);
 
 const int flywheelTeeth = 48;
 
@@ -20,6 +20,7 @@ volatile bool valid = true;
 volatile bool printnow = true;
 volatile bool forward = true;
 volatile bool rot = false;
+
 void setup() {
   pinMode(sol1, OUTPUT);
   pinMode(sol2, OUTPUT);
@@ -33,60 +34,61 @@ void setup() {
   tm.init();
   tm.set(2);
   displayNumber(6969);
-  
   while (!rot) {
     delay(10);
   }
 }
 
 void loop() {
-  displayNumber(analogRead(A0));
-  Serial.println(analogRead(A0));
   if (count >= flywheelTeeth) {
     count = count - flywheelTeeth;
     newTime = millis();
-    Serial.println(newTime - oldTime);
+    float delta = 1 / (float(newTime - oldTime) / 1000) * 60;
+    displayNumber(delta);
     oldTime = newTime;
   }
   if (count < 0) {
     count += flywheelTeeth;
     newTime = millis();
-    Serial.println(newTime - oldTime);
+    float delta = 1 / (float(newTime - oldTime) / 1000) * 60;
+    displayNumber(delta);
     oldTime = newTime;
 
   }
   if (printnow) {
-    //Serial.println(count);
+    Serial.println(count);
     printnow = false;
   }
+  //Spin away from you
+  //  if (count > 32 && count < 35) {
+  //    //if (count > 14 && count < 37) {
+  //    digitalWrite(sol1, HIGH);
+  //    //Serial.println("ON 1");
+  //  } else {
+  //    digitalWrite(sol1, LOW);
+  //  }
+  //  if (count > 8 && count < 11) {
+  //    //if (count > 0 && count < 12) {
+  //    digitalWrite(sol2, HIGH);
+  //    //Serial.println("ON 2");
+  //  } else {
+  //    digitalWrite(sol2, LOW);
+  //  }
 
-  if (count > 33 && count < 37) {
-  //if (count > 14 && count < 37) {
+  //Spin towards you
+  if (count > 43 && count < 46) {
+    //if (count > 14 && count < 37) {
     digitalWrite(sol1, HIGH);
     //Serial.println("ON 1");
   } else {
     digitalWrite(sol1, LOW);
   }
-  if (count > 8 && count < 12) {
-  //if (count > 0 && count < 12) {
+  if (count > 18 && count < 21) {
+    //if (count > 0 && count < 12) {
     digitalWrite(sol2, HIGH);
     //Serial.println("ON 2");
   } else {
     digitalWrite(sol2, LOW);
-  }
-  if (rot) {
-    rot = false;
-    if (forward) {
-      if (count != 44) {
-        Serial.println("Somethings wrong!");
-      }
-      count = 44;
-    } else {
-      if (count != 46) {
-        Serial.println("Somethings wrong!");
-      }
-      count = 46;
-    }
   }
 }
 
@@ -115,12 +117,28 @@ void updatePos() {
 
 void rotComplete() {
   rot = true;
+  if (forward) {
+    if (count != 2) {
+      Serial.println("forward wrong!");
+      Serial.println(count);
+      Serial.println("end");
+    }
+    count = 2;
+  } else {
+    if (count != 0) {
+      Serial.println("backward wrong!");
+      Serial.println(count);
+      Serial.println("end");
+    }
+    count = 0;
+  }
+
 }
 
-void displayNumber(int num){   
-    tm.display(3, num % 10);   
-    tm.display(2, num / 10 % 10);   
-    tm.display(1, num / 100 % 10);   
-    tm.display(0, num / 1000 % 10);
+void displayNumber(int num) {
+  tm.display(3, num % 10);
+  tm.display(2, num / 10 % 10);
+  tm.display(1, num / 100 % 10);
+  tm.display(0, num / 1000 % 10);
 }
 
