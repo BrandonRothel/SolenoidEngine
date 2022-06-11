@@ -20,6 +20,9 @@ volatile bool valid = true;
 volatile bool printnow = true;
 volatile bool forward = true;
 volatile bool rot = false;
+const int arraySize = 5;
+int rotationNumber = 0;
+int rpmArray[arraySize];
 
 void setup() {
   pinMode(sol1, OUTPUT);
@@ -33,6 +36,9 @@ void setup() {
   Serial.begin(9600);
   tm.init();
   tm.set(2);
+  for (int i = 0; i < arraySize; i++) {
+    rpmArray[i] = 0;
+  }
   displayNumber(6969);
   while (!rot) {
     delay(10);
@@ -43,20 +49,41 @@ void loop() {
   if (count >= flywheelTeeth) {
     count = count - flywheelTeeth;
     newTime = millis();
-    float delta = 1 / (float(newTime - oldTime) / 1000) * 60;
-    displayNumber(delta);
+    float curRPM = 1 / (float(newTime - oldTime) / 1000) * 60;
+    displayNumber(curRPM);
     oldTime = newTime;
+    rpmArray[rotationNumber % arraySize] = curRPM;
+    rotationNumber++;
+    int avgRPM = 0;
+    for (int i = 0; i < arraySize; i++) {
+      Serial.print(rpmArray[i]);
+      Serial.print(" ");
+      avgRPM += rpmArray[i];
+    }
+    Serial.print("\n");
+    avgRPM = avgRPM/arraySize;
+    displayNumber(avgRPM);
   }
   if (count < 0) {
     count += flywheelTeeth;
     newTime = millis();
-    float delta = 1 / (float(newTime - oldTime) / 1000) * 60;
-    displayNumber(delta);
+    float curRPM = 1 / (float(newTime - oldTime) / 1000) * 60;
+    displayNumber(curRPM);
     oldTime = newTime;
-
+    rpmArray[rotationNumber % arraySize] = curRPM;
+    rotationNumber++;
+    int avgRPM = 0;
+    for (int i = 0; i < arraySize; i++) {
+      Serial.print(rpmArray[i]);
+      Serial.print(" ");
+      avgRPM += rpmArray[i];
+    }
+    Serial.print("\n");
+    avgRPM = avgRPM/arraySize;
+    displayNumber(avgRPM);
   }
   if (printnow) {
-    Serial.println(count);
+    //Serial.println(count);
     printnow = false;
   }
   //Spin away from you
@@ -76,14 +103,14 @@ void loop() {
   //  }
 
   //Spin towards you
-  if (count > 43 && count < 46) {
+  if (count > 41 && count < 46) {
     //if (count > 14 && count < 37) {
     digitalWrite(sol1, HIGH);
     //Serial.println("ON 1");
   } else {
     digitalWrite(sol1, LOW);
   }
-  if (count > 18 && count < 21) {
+  if (count > 16 && count < 21) {
     //if (count > 0 && count < 12) {
     digitalWrite(sol2, HIGH);
     //Serial.println("ON 2");
