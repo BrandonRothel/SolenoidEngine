@@ -23,6 +23,11 @@ volatile bool rot = false;
 const int arraySize = 5;
 int rotationNumber = 0;
 int rpmArray[arraySize];
+int desiredRPM = 200;
+int avgRPM = 0;
+int sol1ToothPower = 40;
+int sol2ToothPower = 15;
+int solPowerWidth = 5;
 
 void setup() {
   pinMode(sol1, OUTPUT);
@@ -35,7 +40,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(hallEff), rotComplete, FALLING);
   Serial.begin(9600);
   tm.init();
-  tm.set(2);
+  tm.set(1);
   for (int i = 0; i < arraySize; i++) {
     rpmArray[i] = 0;
   }
@@ -54,7 +59,7 @@ void loop() {
     oldTime = newTime;
     rpmArray[rotationNumber % arraySize] = curRPM;
     rotationNumber++;
-    int avgRPM = 0;
+    avgRPM = 0;
     for (int i = 0; i < arraySize; i++) {
       Serial.print(rpmArray[i]);
       Serial.print(" ");
@@ -72,7 +77,7 @@ void loop() {
     oldTime = newTime;
     rpmArray[rotationNumber % arraySize] = curRPM;
     rotationNumber++;
-    int avgRPM = 0;
+    avgRPM = 0;
     for (int i = 0; i < arraySize; i++) {
       Serial.print(rpmArray[i]);
       Serial.print(" ");
@@ -81,9 +86,16 @@ void loop() {
     Serial.print("\n");
     avgRPM = avgRPM/arraySize;
     displayNumber(avgRPM);
+    if(rotationNumber%10 == 0){
+      if(avgRPM < desiredRPM){
+        solPowerWidth++;
+      } else {
+        solPowerWidth--;
+      }
+    }
   }
   if (printnow) {
-    //Serial.println(count);
+    Serial.println(count);
     printnow = false;
   }
   //Spin away from you
@@ -103,14 +115,14 @@ void loop() {
   //  }
 
   //Spin towards you
-  if (count > 41 && count < 46) {
+  if (count > sol1ToothPower && count < sol1ToothPower+solPowerWidth) {
     //if (count > 14 && count < 37) {
     digitalWrite(sol1, HIGH);
     //Serial.println("ON 1");
   } else {
     digitalWrite(sol1, LOW);
   }
-  if (count > 16 && count < 21) {
+  if (count > sol2ToothPower && count < sol2ToothPower+solPowerWidth) {
     //if (count > 0 && count < 12) {
     digitalWrite(sol2, HIGH);
     //Serial.println("ON 2");
